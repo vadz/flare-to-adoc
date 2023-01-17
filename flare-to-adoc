@@ -47,29 +47,38 @@ sub convert-element-to-adoc(Str $prefix, XML::Element $elem, Str $suffix = '' --
     $prefix ~ convert-children-to-adoc($elem) ~ $suffix
 }
 
+# Another helper creating a header of the given length.
+sub make-adoc-header(Int $level, XML::Element $elem --> Str) {
+    # All header contents must be on the same line (we could also use '+' for
+    # continuation, but this doesn't look good).
+    my $header-text = convert-children-to-adoc($elem);
+    $header-text ~~ s:g/\n/ /;
+
+    ('=' x $level) ~ ' ' ~ $header-text ~ "\n"
+}
+
 sub convert-h1-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('== ', $elem, "\n")
+    make-adoc-header(1, $elem)
 }
 
 sub convert-h2-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('=== ', $elem, "\n")
+    make-adoc-header(2, $elem)
 }
 
 sub convert-h3-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('==== ', $elem, "\n")
+    make-adoc-header(3, $elem)
 }
 
 sub convert-h4-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('===== ', $elem, "\n")
+    make-adoc-header(4, $elem)
 }
 
 sub convert-h5-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('====== ', $elem, "\n")
+    make-adoc-header(5, $elem)
 }
 
 sub convert-h6-to-adoc(XML::Element $elem --> Str) {
-    # Note: there is no deeper nesting in AsciiDoc, so handle it as <h5>.
-    convert-element-to-adoc('====== ', $elem, "\n")
+    make-adoc-header(6, $elem)
 }
 
 sub convert-p-to-adoc(XML::Element $elem --> Str) {
