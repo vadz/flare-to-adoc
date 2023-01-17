@@ -121,6 +121,45 @@ sub convert-li-to-adoc(XML::Element $elem --> Str) {
     $*LIST-LEADER ~ ' ' ~ $list-text
 }
 
+sub convert-img-to-adoc(XML::Element $elem --> Str) {
+    my $adoc = '';
+
+    for $elem.attribs.kv -> $attr, $value {
+        given $attr {
+            when 'src' {
+                # We assume that all images are in the same directory and
+                # remove it from them.
+                my $parts = $value.IO.parts;
+                if $*IMAGE-DIRECTORY {
+                    note "$*CURRENT-FILE: image not in $*IMAGE-DIRECTORY."
+                        if $parts.dirname ne $*IMAGE-DIRECTORY
+                } else {
+                    # Remember it for the next time.
+                    $*IMAGE-DIRECTORY = $parts.dirname
+                }
+
+                $adoc = "image:{ $parts.basename }"
+            }
+
+            when 'style' {
+                # Ignore it.
+            }
+
+            default {
+                note "$*CURRENT-FILE: $attr attribute of <img> ignored."
+            }
+        }
+    }
+
+    if $adoc {
+        $adoc ~= '[]'
+    } else {
+        note "$*CURRENT-FILE: <img> without src attribute?"
+    }
+
+    $adoc
+}
+
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
     convert-element-to-adoc('_', $elem, '_')
 }
@@ -134,6 +173,9 @@ sub MAIN(
         *@flare-files,
         Bool :$verbose, #= Be more talkative.
     ) {
+    # Dynamically scoped variable containing the images directory.
+    my $*IMAGE-DIRECTORY = '';
+
     my $exit-code = 0;
     for @flare-files -> $flare-file {
         # Dynamically scoped variable used in the error messages.
