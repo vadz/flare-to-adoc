@@ -41,29 +41,78 @@ sub convert-children-to-adoc(XML::Element $elem --> Str) {
     return $adoc
 }
 
+# Helper converting the given element to AsciiDoc by using the given prefix
+# and suffix around the conversion of its contents.
+sub convert-element-to-adoc(Str $prefix, XML::Element $elem, Str $suffix = '' --> Str) {
+    $prefix ~ convert-children-to-adoc($elem) ~ $suffix
+}
+
 sub convert-h1-to-adoc(XML::Element $elem --> Str) {
-    '== ' ~ convert-children-to-adoc($elem) ~ "\n"
+    convert-element-to-adoc('== ', $elem, "\n")
+}
+
+sub convert-h2-to-adoc(XML::Element $elem --> Str) {
+    convert-element-to-adoc('=== ', $elem, "\n")
+}
+
+sub convert-h3-to-adoc(XML::Element $elem --> Str) {
+    convert-element-to-adoc('==== ', $elem, "\n")
+}
+
+sub convert-h4-to-adoc(XML::Element $elem --> Str) {
+    convert-element-to-adoc('===== ', $elem, "\n")
+}
+
+sub convert-h5-to-adoc(XML::Element $elem --> Str) {
+    convert-element-to-adoc('====== ', $elem, "\n")
+}
+
+sub convert-h6-to-adoc(XML::Element $elem --> Str) {
+    # Note: there is no deeper nesting in AsciiDoc, so handle it as <h5>.
+    convert-element-to-adoc('====== ', $elem, "\n")
 }
 
 sub convert-p-to-adoc(XML::Element $elem --> Str) {
-    convert-children-to-adoc($elem);
+    convert-children-to-adoc($elem)
+}
+
+sub convert-br-to-adoc(XML::Element $elem --> Str) {
+    # This shouldn't happen.
+    if $elem.nodes {
+        note "$current-file: non-empty <br> contents ignored."
+    }
+
+    "\n"
+}
+
+sub convert-span-to-adoc(XML::Element $elem --> Str) {
+    my $adoc = '';
+
+    my $class = $elem.attribs<class>;
+    $adoc ~= "[.$class]" if defined $class;
+
+    $adoc ~ convert-element-to-adoc('#', $elem, '#')
+}
+
+sub convert-ol-to-adoc(XML::Element $elem --> Str) {
+    convert-children-to-adoc($elem)
 }
 
 sub convert-ul-to-adoc(XML::Element $elem --> Str) {
-    convert-children-to-adoc($elem);
+    convert-children-to-adoc($elem)
 }
 
 sub convert-li-to-adoc(XML::Element $elem --> Str) {
-    '* ' ~ convert-children-to-adoc($elem)
+    convert-element-to-adoc('* ', $elem)
 }
 
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
-    '_' ~ convert-children-to-adoc($elem) ~ '_'
+    convert-element-to-adoc('_', $elem, '_')
 }
 
 sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
     # TODO: Handle this as a link?
-    convert-children-to-adoc($elem);
+    convert-children-to-adoc($elem)
 }
 
 sub MAIN(
@@ -81,9 +130,10 @@ sub MAIN(
         my $html-body = $html-doc.root.elements(:TAG<body>, :SINGLE);
         my $adoc = convert-children-to-adoc($html-body);
 
-        # Remove insignificant leading and trailing spaces, but leave a new
-        # line at the end of file.
+        # Remove insignificant leading and trailing spaces and blank lines,
+        # but leave a new line at the end of file.
         $adoc ~~ s/^\s+//;
+        $adoc ~~ s:g/\n\n\n+/\n\n/;
         $adoc ~~ s/\s+$/\n/;
 
         $out-file.IO.spurt($adoc);
