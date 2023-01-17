@@ -1,0 +1,106 @@
+#!/usr/bin/env raku
+
+use XML;
+
+# Global containing the name of the current file
+my $current-file;
+
+# Iterate over all children of an element calling the appropriate conversion
+# functions for each of them.
+sub convert-children-to-adoc(XML::Element $elem --> Str) {
+    my $adoc = '';
+    if $elem.nodes {
+        for $elem.nodes -> $child {
+            if $child ~~ XML::Element {
+                my $convert-child = "convert-{ $child.name }-to-adoc";
+                $convert-child ~~ tr/:/-/;
+                $adoc ~= &::($convert-child)($child);
+                CATCH {
+                    when X::NoSuchSymbol {
+                        note "$current-file: unsupported tag { $child.name }."
+                    }
+                }
+            } elsif $child ~~ XML::Text {
+                # Unindent the text, this is important because many AsciiDoc
+                # constructs must be at the beginning of the line, without any
+                # spaces.
+                my $text = ~$child;
+                $text ~~ s:g/\n\h+/\n/;
+
+                # Also handle the only entity which seems to be used in Flare
+                # HTML.
+                $text ~~ s:g/'&#160;'/\{nbsp}/;
+
+                $adoc ~= $text
+            } else {
+                note qq{Ignoring unknown XML node "$child".}
+            }
+        }
+    }
+
+    return $adoc
+}
+
+sub convert-h1-to-adoc(XML::Element $elem --> Str) {
+    '== ' ~ convert-children-to-adoc($elem) ~ "\n"
+}
+
+sub convert-p-to-adoc(XML::Element $elem --> Str) {
+    convert-children-to-adoc($elem);
+}
+
+sub convert-ul-to-adoc(XML::Element $elem --> Str) {
+    convert-children-to-adoc($elem);
+}
+
+sub convert-li-to-adoc(XML::Element $elem --> Str) {
+    '* ' ~ convert-children-to-adoc($elem)
+}
+
+sub convert-em-to-adoc(XML::Element $elem --> Str) {
+    '_' ~ convert-children-to-adoc($elem) ~ '_'
+}
+
+sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
+    # TODO: Handle this as a link?
+    convert-children-to-adoc($elem);
+}
+
+sub MAIN(
+        *@flare-files,
+        Bool :$verbose, #= Be more talkative.
+    ) {
+    my $exit-code = 0;
+    for @flare-files -> $flare-file {
+        $current-file = $flare-file.IO.basename;
+
+        my $out-file = $flare-file.IO.subst(/'.' html? $/) ~ '.adoc';
+        # say qq{Converting "$flare-file" to "$out-file"...} if $verbose;
+
+        my $html-doc = from-xml-file($flare-file);
+        my $html-body = $html-doc.root.elements(:TAG<body>, :SINGLE);
+        my $adoc = convert-children-to-adoc($html-body);
+
+        # Remove insignificant leading and trailing spaces, but leave a new
+        # line at the end of file.
+        $adoc ~~ s/^\s+//;
+        $adoc ~~ s/\s+$/\n/;
+
+        $out-file.IO.spurt($adoc);
+
+        CATCH {
+            default {
+                note qq{Error converting "$flare-file": $_.};
+                $exit-code = 1;
+
+                next
+            }
+        }
+    }
+
+    if $exit-code == 0 {
+        say "Done in { now - INIT now }s"
+    }
+
+    exit $exit-code
+}
