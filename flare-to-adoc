@@ -101,15 +101,18 @@ sub convert-span-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-ol-to-adoc(XML::Element $elem --> Str) {
+    # Dynamically scoped variable used in convert-li-to-adoc().
+    my $*LIST-LEADER = '.';
     convert-children-to-adoc($elem)
 }
 
 sub convert-ul-to-adoc(XML::Element $elem --> Str) {
+    my $*LIST-LEADER = '*';
     convert-children-to-adoc($elem)
 }
 
 sub convert-li-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('* ', $elem)
+    convert-element-to-adoc($*LIST-LEADER ~ ' ', $elem)
 }
 
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
