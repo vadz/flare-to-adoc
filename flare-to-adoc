@@ -112,7 +112,13 @@ sub convert-ul-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-li-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc($*LIST-LEADER ~ ' ', $elem)
+    my $list-text = convert-children-to-adoc($elem);
+
+    # List item must start at the same line as the list leader, so remove all
+    # leading whitespace that could be present in HTML.
+    $list-text ~~ s/^\s+//;
+
+    $*LIST-LEADER ~ ' ' ~ $list-text
 }
 
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
