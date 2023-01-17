@@ -2,9 +2,6 @@
 
 use XML;
 
-# Global containing the name of the current file
-my $current-file;
-
 # Iterate over all children of an element calling the appropriate conversion
 # functions for each of them.
 sub convert-children-to-adoc(XML::Element $elem --> Str) {
@@ -17,7 +14,7 @@ sub convert-children-to-adoc(XML::Element $elem --> Str) {
                 $adoc ~= &::($convert-child)($child);
                 CATCH {
                     when X::NoSuchSymbol {
-                        note "$current-file: unsupported tag { $child.name }."
+                        note "$*CURRENT-FILE: unsupported tag { $child.name }."
                     }
                 }
             } elsif $child ~~ XML::Text {
@@ -88,7 +85,7 @@ sub convert-p-to-adoc(XML::Element $elem --> Str) {
 sub convert-br-to-adoc(XML::Element $elem --> Str) {
     # This shouldn't happen.
     if $elem.nodes {
-        note "$current-file: non-empty <br> contents ignored."
+        note "$*CURRENT-FILE: non-empty <br> contents ignored."
     }
 
     "\n"
@@ -130,7 +127,8 @@ sub MAIN(
     ) {
     my $exit-code = 0;
     for @flare-files -> $flare-file {
-        $current-file = $flare-file.IO.basename;
+        # Dynamically scoped variable used in the error messages.
+        my $*CURRENT-FILE = $flare-file.IO.basename;
 
         my $out-file = $flare-file.IO.subst(/'.' html? $/) ~ '.adoc';
         # say qq{Converting "$flare-file" to "$out-file"...} if $verbose;
