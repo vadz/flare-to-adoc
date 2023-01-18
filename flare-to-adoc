@@ -139,7 +139,8 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                     $*IMAGE-DIRECTORY = $parts.dirname
                 }
 
-                $adoc = "image:{ $parts.basename }"
+                # Our images are all block images and never inline.
+                $adoc = "\nimage::{ $parts.basename }"
             }
 
             when 'style' {
@@ -153,7 +154,7 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
     }
 
     if $adoc {
-        $adoc ~= '[]'
+        $adoc ~= "[]\n"
     } else {
         note "$*CURRENT-FILE: <img> without src attribute?"
     }
