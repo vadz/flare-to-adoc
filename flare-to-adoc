@@ -113,13 +113,33 @@ sub convert-ul-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-li-to-adoc(XML::Element $elem --> Str) {
+    my $adoc = $*LIST-LEADER ~ ' ';
+
     my $list-text = convert-children-to-adoc($elem);
 
     # List item must start at the same line as the list leader, so remove all
     # leading whitespace that could be present in HTML.
     $list-text ~~ s/^\s+//;
 
-    $*LIST-LEADER ~ ' ' ~ $list-text
+    # We also can't have blank lines in the item text, so if we do, use an
+    # open block to ensure the list continues across them, as recommended in
+    # the documentation. We could also use '+', but this seems simpler and
+    # more robust.
+    if $list-text.contains("\n\n") {
+        my ($leading, $rest) = $list-text.split("\n\n", 2);
+
+        $adoc ~= qq:to/END/;
+            $leading
+            +
+            --
+            $rest
+            --
+            END
+    } else {
+        $adoc ~= $list-text
+    }
+
+    $adoc
 }
 
 sub convert-img-to-adoc(XML::Element $elem --> Str) {
