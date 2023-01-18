@@ -4,7 +4,7 @@ use XML;
 
 # Iterate over all children of an element calling the appropriate conversion
 # functions for each of them.
-sub convert-children-to-adoc(XML::Element $elem --> Str) {
+sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
     my $adoc = '';
     if $elem.nodes {
         for $elem.nodes -> $child {
@@ -27,6 +27,11 @@ sub convert-children-to-adoc(XML::Element $elem --> Str) {
                 # Also handle the only entity which seems to be used in Flare
                 # HTML.
                 $text ~~ s:g/'&#160;'/\{nbsp}/;
+
+                if $skip-ws && $text eq "\n" {
+                    # Skip text consisting of whitespace only.
+                    next
+                }
 
                 $adoc ~= $text
             } else {
@@ -184,6 +189,37 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
 
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
     convert-element-to-adoc('_', $elem, '_')
+}
+
+sub convert-col-to-adoc(XML::Element $elem --> Str) {
+    # TODO: Parse width and use it for the cols attribute of the table.
+    ''
+}
+
+sub convert-td-to-adoc(XML::Element $elem --> Str) {
+    my $cell-text = convert-children-to-adoc($elem);
+    # The cell contents must be on the same line as '|' and while line breaks
+    # are allowed in it, we shouldn't have any trailing ones.
+    $cell-text ~~ s/^\s+//;
+    $cell-text ~~ s/\s+$//;
+
+    '|' ~ $cell-text
+}
+
+sub convert-tr-to-adoc(XML::Element $elem --> Str) {
+    # Ignore any whitespace inside this tag, its only contents should be
+    # inside the nested <td>s.
+    convert-children-to-adoc($elem, :skip-ws)
+}
+
+sub convert-tbody-to-adoc(XML::Element $elem --> Str) {
+    convert-children-to-adoc($elem)
+}
+
+sub convert-table-to-adoc(XML::Element $elem --> Str) {
+    my $table-marker = "|===\n";
+
+    "\n" ~ convert-element-to-adoc($table-marker, $elem, $table-marker)
 }
 
 sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
