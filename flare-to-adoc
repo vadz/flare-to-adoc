@@ -103,7 +103,12 @@ sub convert-span-to-adoc(XML::Element $elem --> Str) {
     my $class = $elem.attribs<class>;
     $adoc ~= "[.$class]" if defined $class;
 
-    $adoc ~ convert-element-to-adoc('#', $elem, '#')
+    my $contents = convert-children-to-adoc($elem);
+
+    # Blank lines are not allowed inside inline styles.
+    $contents ~~ s:g/\n\n/\n/;
+
+    $adoc ~= "#$contents#"
 }
 
 sub convert-ol-to-adoc(XML::Element $elem --> Str) {
