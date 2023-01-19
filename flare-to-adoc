@@ -2,6 +2,13 @@
 
 use XML;
 
+sub convert-html-to-adoc(Str $path --> Str) {
+    my $html-doc = from-xml-file($path);
+    my $html-body = $html-doc.root.elements(:TAG<body>, :SINGLE);
+
+    convert-children-to-adoc($html-body)
+}
+
 # Iterate over all children of an element calling the appropriate conversion
 # functions for each of them.
 sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
@@ -300,9 +307,7 @@ sub MAIN(
         my $out-file = $flare-file.IO.subst(/'.' html? $/) ~ '.adoc';
         # say qq{Converting "$flare-file" to "$out-file"...} if $verbose;
 
-        my $html-doc = from-xml-file($flare-file);
-        my $html-body = $html-doc.root.elements(:TAG<body>, :SINGLE);
-        my $adoc = convert-children-to-adoc($html-body);
+        my $adoc = indir $flare-file.IO.dirname, { convert-html-to-adoc($*CURRENT-FILE) };
 
         # Remove insignificant leading and trailing spaces and blank lines,
         # but leave a new line at the end of file.
