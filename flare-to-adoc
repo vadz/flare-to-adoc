@@ -90,6 +90,7 @@ sub convert-h6-to-adoc(XML::Element $elem --> Str) {
 
 sub convert-p-to-adoc(XML::Element $elem --> Str) {
     # TODO: Handle style="font-weight: bold".
+    # TODO: Handle class="note".
     convert-children-to-adoc($elem)
 }
 
