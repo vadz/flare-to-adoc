@@ -198,6 +198,27 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
     $adoc
 }
 
+sub convert-a-to-adoc(XML::Element $elem --> Str) {
+    # Distinguish between external links and anchors that can be used as
+    # targets of <MadCap:xref>.
+    my $adoc;
+    if defined my $href = $elem.attribs<href> {
+        $adoc = "link:{ $href }[{ $elem.attribs<title> // ''}]"
+    } else {
+        my ($name, $id) = $elem.attribs<name id>;
+        if ! defined $id {
+            note "$*CURRENT-FILE: unrecognized <a> format."
+        }
+        if $id ne $name {
+            note "$*CURRENT-FILE: mismatch between <a> name ($name) and id ($id)."
+        }
+
+        $adoc = "[[$id]]"
+    }
+
+    $adoc
+}
+
 sub convert-b-to-adoc(XML::Element $elem --> Str) {
     convert-element-to-adoc('*', $elem, '*')
 }
@@ -238,8 +259,32 @@ sub convert-table-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
-    # TODO: Handle this as a link?
-    convert-children-to-adoc($elem)
+    my $href = $elem.attribs<href>;
+    if ! defined $href {
+        note "$*CURRENT-FILE: no href in MadCap:xref tag?"
+    }
+
+    # Adjust the links to the other documents.
+    $href ~~ s/'.htm' <?before $ | '#'>/.adoc/;
+
+    my $title = convert-children-to-adoc($elem);
+
+    # This seems to get replaced by the actual page number, but we can't do it
+    # in AsciiDoc, so just drop this part.
+    $title ~~ s/' on page{nbsp}1'//;
+
+    # Not sure what the precise syntax is here, but the text in quotes should
+    # be used as the link title and MadCap Flare automatically uses "see ..."
+    # if it's empty, so do something similar.
+    $title ~~ s/^\"//;
+    $title ~~ s/\"$//;
+
+    if $title eq '' {
+        my $anchor ~= S/.* '#'// with $href;
+        $title = "see $anchor";
+    }
+
+    "xref:{ $href }[$title]";
 }
 
 sub MAIN(
