@@ -198,6 +198,10 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
     $adoc
 }
 
+sub convert-b-to-adoc(XML::Element $elem --> Str) {
+    convert-element-to-adoc('*', $elem, '*')
+}
+
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
     convert-element-to-adoc('_', $elem, '_')
 }
