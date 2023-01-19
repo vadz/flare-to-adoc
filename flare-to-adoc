@@ -135,7 +135,7 @@ sub convert-li-to-adoc(XML::Element $elem --> Str) {
 
     # List item must start at the same line as the list leader, so remove all
     # leading whitespace that could be present in HTML.
-    $list-text ~~ s/^\s+//;
+    $list-text .= trim-leading;
 
     # We also can't have blank lines in the item text, so if we do, use an
     # open block to ensure the list continues across them, as recommended in
@@ -234,12 +234,10 @@ sub convert-col-to-adoc(XML::Element $elem --> Str) {
 
 sub convert-td-to-adoc(XML::Element $elem --> Str) {
     my $cell-text = convert-children-to-adoc($elem);
+
     # The cell contents must be on the same line as '|' and while line breaks
     # are allowed in it, we shouldn't have any trailing ones.
-    $cell-text ~~ s/^\s+//;
-    $cell-text ~~ s/\s+$//;
-
-    '|' ~ $cell-text
+    '|' ~ $cell-text.trim
 }
 
 sub convert-tr-to-adoc(XML::Element $elem --> Str) {
