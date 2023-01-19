@@ -49,14 +49,17 @@ sub convert-element-to-adoc(Str $prefix, XML::Element $elem, Str $suffix = '' --
     $prefix ~ convert-children-to-adoc($elem) ~ $suffix
 }
 
-# Another helper creating a header of the given length.
+# Another helper creating a header of the given level.
 sub make-adoc-header(Int $level, XML::Element $elem --> Str) {
     # All header contents must be on the same line (we could also use '+' for
     # continuation, but this doesn't look good).
     my $header-text = convert-children-to-adoc($elem);
     $header-text ~~ s:g/\n/ /;
 
-    ('=' x $level) ~ ' ' ~ $header-text ~ "\n"
+    # The number of equal signs is level+1, in particular we never create
+    # level 0 headers here, as this corresponds to the document title and can
+    # only be used once.
+    ('=' x ($level + 1)) ~ ' ' ~ $header-text ~ "\n"
 }
 
 sub convert-h1-to-adoc(XML::Element $elem --> Str) {
@@ -80,7 +83,9 @@ sub convert-h5-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-h6-to-adoc(XML::Element $elem --> Str) {
-    make-adoc-header(6, $elem)
+    # There is no level 6 title in AsciiDoc, so handle this one in the same
+    # way as <h5>.
+    make-adoc-header(5, $elem)
 }
 
 sub convert-p-to-adoc(XML::Element $elem --> Str) {
