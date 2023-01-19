@@ -2,6 +2,43 @@
 
 use XML;
 
+# A map of snippet paths to their contents in AsciiDoc.
+my %snippets;
+
+# Return the name of the snippet to use for the given path.
+sub snippet-name-for-path(Str $path --> Str) {
+    my $name = $path;
+    $name ~~ s/^ [ .* '/' ]? ( <-[/.]>+ ) '.flsnp' $/$0/;
+    if ! $/ {
+        note "$*CURRENT-FILE: unexpected <MadCap:snippetText> source ($path)."
+    }
+
+    $name
+}
+
+# Add a snippet with the specified path, i.e. read it from the file and
+# convert its contents to AsciiDoc if it hadn't been done yet.
+#
+# Returns the name to use for this snippet.
+sub snippet-add-or-get(Str $path --> Str) {
+    %snippets{$path} = convert-html-to-adoc($path) unless %snippets{$path}:exists;
+
+    snippet-name-for-path($path)
+}
+
+# Return all snippet definitions to put at the beginning of an AsciiDoc
+# document.
+sub snippet-definitions(--> Str) {
+    # Note that we need to use pass:quotes to expand AsciiDoc markup inside
+    # the snippets.
+    my $adoc = '';
+    for %snippets.kv -> $path, $text {
+        $adoc ~= ":{ snippet-name-for-path($path) }: pass:quotes[{ $text.trim }]\n"
+    }
+
+    $adoc
+}
+
 sub convert-html-to-adoc(Str $path --> Str) {
     my $html-doc = from-xml-file($path);
     my $html-body = $html-doc.root.elements(:TAG<body>, :SINGLE);
@@ -292,6 +329,14 @@ sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
     "xref:{ $href }[$title]";
 }
 
+sub convert-MadCap-snippetText-to-adoc(XML::Element $elem --> Str) {
+    if $elem.nodes {
+        note "$*CURRENT-FILE: non-empty <MadCap:snippetText> contents ignored."
+    }
+
+    '{' ~ snippet-add-or-get($elem.attribs<src>) ~ '}'
+}
+
 sub MAIN(
         *@flare-files,
         Bool :$verbose, #= Be more talkative.
@@ -325,6 +370,11 @@ sub MAIN(
                 next
             }
         }
+    }
+
+    if %snippets {
+        say "The following snippet definitions are required:";
+        say snippet-definitions();
     }
 
     if $exit-code == 0 {
