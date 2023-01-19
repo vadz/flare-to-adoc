@@ -59,7 +59,7 @@ sub make-adoc-header(Int $level, XML::Element $elem --> Str) {
     # The number of equal signs is level+1, in particular we never create
     # level 0 headers here, as this corresponds to the document title and can
     # only be used once.
-    ('=' x ($level + 1)) ~ ' ' ~ $header-text ~ "\n"
+    "\n" ~ ('=' x ($level + 1)) ~ ' ' ~ $header-text ~ "\n"
 }
 
 sub convert-h1-to-adoc(XML::Element $elem --> Str) {
