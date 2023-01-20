@@ -89,6 +89,14 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
                 $adoc ~= $text
             }
 
+            when XML::CDATA {
+                if $child.data ~~ /\S/ {
+                    # Use .raku to show whitespace, which is commonly present
+                    # in CDATA, more clearly.
+                    note "$*CURRENT-FILE: ignoring CDATA { $child.data.raku }."
+                }
+            }
+
             default {
                 note qq{$*CURRENT-FILE: ignoring unknown XML node "$child".}
             }
