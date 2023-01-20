@@ -90,7 +90,7 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
             }
 
             default {
-                note qq{Ignoring unknown XML node "$child".}
+                note qq{$*CURRENT-FILE: ignoring unknown XML node "$child".}
             }
         }
     }
