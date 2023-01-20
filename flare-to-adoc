@@ -352,6 +352,14 @@ sub convert-col-to-adoc(XML::Element $elem --> Str) {
     ''
 }
 
+sub convert-th-to-adoc(XML::Element $elem --> Str) {
+    # This is the same as <td> but update the flag to tell the table handler
+    # that we've got a header.
+    %*TABLE_OPTIONS<header> = True;
+
+    convert-td-to-adoc($elem)
+}
+
 sub convert-td-to-adoc(XML::Element $elem --> Str) {
     my $cell-text = convert-children-to-adoc($elem);
 
@@ -373,7 +381,18 @@ sub convert-tbody-to-adoc(XML::Element $elem --> Str) {
 sub convert-table-to-adoc(XML::Element $elem --> Str) {
     my $table-marker = "|===\n";
 
-    "\n" ~ convert-element-to-adoc($table-marker, $elem, $table-marker)
+    # Dynamic variable updated by the nested handlers.
+    my %*TABLE_OPTIONS;
+
+    my $body = convert-element-to-adoc($table-marker, $elem, $table-marker);
+
+    # We use keys that have the same names as AsciiDoc attributes.
+    my $table-attrs = %*TABLE_OPTIONS.keys.map({ "%$^a" }).join(',');
+    if $table-attrs {
+        $table-attrs = "\n[$table-attrs]"
+    }
+
+    $table-attrs ~ "\n" ~ $body
 }
 
 sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
