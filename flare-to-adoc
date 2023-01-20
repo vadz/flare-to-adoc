@@ -5,6 +5,9 @@ use XML;
 # A map of snippet paths to their contents in AsciiDoc.
 my %snippets;
 
+# A separate hash of known snippet names already defined somewhere else.
+my %defined-snippets;
+
 # Return the name of the snippet to use for the given path.
 sub snippet-name-for-path(Str $path --> Str) {
     my $name = $path;
@@ -21,9 +24,13 @@ sub snippet-name-for-path(Str $path --> Str) {
 #
 # Returns the name to use for this snippet.
 sub snippet-add-or-get(Str $path --> Str) {
-    %snippets{$path} = convert-html-to-adoc($path) unless %snippets{$path}:exists;
+    my $name = snippet-name-for-path($path);
 
-    snippet-name-for-path($path)
+    if %defined-snippets{$name}:!exists and %snippets{$path}:!exists {
+        %snippets{$path} = convert-html-to-adoc($path)
+    }
+
+    $name
 }
 
 # Return all snippet definitions to put at the beginning of an AsciiDoc
@@ -339,8 +346,16 @@ sub convert-MadCap-snippetText-to-adoc(XML::Element $elem --> Str) {
 
 sub MAIN(
         *@flare-files,
-        Bool :$verbose, #= Be more talkative.
+        Bool :$verbose,          #= Be more talkative.
+        Str  :$defined-snippets, #= Already defined and known snippets.
     ) {
+    # Prepopulate known snippets with the snippets that are already defined
+    # somewhere. As we don't have their expansions, just use "Any".
+    if $defined-snippets {
+        my @defined-snippets = $defined-snippets.split(',');
+        %defined-snippets{@defined-snippets} = (Any) xx @defined-snippets;
+    }
+
     # Dynamically scoped variable containing the images directory.
     my $*IMAGE-DIRECTORY = '';
 
