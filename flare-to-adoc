@@ -209,6 +209,20 @@ sub convert-li-to-adoc(XML::Element $elem --> Str) {
     $adoc
 }
 
+sub convert-dl-to-adoc(XML::Element $elem --> Str) {
+    # Nothing special to do for the start of a definition list, just ensure
+    # that it starts and ends with a new line.
+    "\n" ~ convert-children-to-adoc($elem) ~ "\n"
+}
+
+sub convert-dt-to-adoc(XML::Element $elem --> Str) {
+    convert-children-to-adoc($elem) ~ "::"
+}
+
+sub convert-dd-to-adoc(XML::Element $elem --> Str) {
+    '  ' ~ convert-children-to-adoc($elem)
+}
+
 sub convert-img-to-adoc(XML::Element $elem --> Str) {
     my $adoc = '';
 
