@@ -432,6 +432,10 @@ sub convert-MadCap-snippetText-to-adoc(XML::Element $elem --> Str) {
     '{' ~ snippet-add-or-get($elem.attribs<src>) ~ '}'
 }
 
+sub convert-MadCap-pageBreak-to-adoc(XML::Element $elem --> Str) {
+    "\n<<<\n"
+}
+
 sub convert-MadCap-tocProxy-to-adoc(XML::Element $elem --> Str) {
     # Nothing to do here, TOC is generated automatically.
     ''
