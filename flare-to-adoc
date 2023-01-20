@@ -154,13 +154,17 @@ sub convert-br-to-adoc(XML::Element $elem --> Str) {
     "\n"
 }
 
-sub convert-to-adoc-inline-style(Str $style, XML::Element $elem --> Str) {
+sub convert-to-adoc-inline-delim(Str $delim, XML::Element $elem --> Str) {
     my $contents = convert-children-to-adoc($elem);
 
     # Blank lines are not allowed inside inline styles.
     $contents ~~ s:g/\n\n/\n/;
 
-    "[.$style]#$contents#"
+    $delim ~ $contents ~ $delim
+}
+
+sub convert-to-adoc-inline-style(Str $style, XML::Element $elem --> Str) {
+    "[.$style]" ~ convert-to-adoc-inline-delim('#', $elem)
 }
 
 sub convert-span-to-adoc(XML::Element $elem --> Str) {
@@ -296,15 +300,19 @@ sub convert-a-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-b-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('*', $elem, '*')
+    convert-to-adoc-inline-delim('*', $elem)
+}
+
+sub convert-strong-to-adoc(XML::Element $elem --> Str) {
+    convert-to-adoc-inline-delim('*', $elem)
 }
 
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('_', $elem, '_')
+    convert-to-adoc-inline-delim('_', $elem)
 }
 
 sub convert-q-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('`', $elem, '`')
+    convert-to-adoc-inline-delim('`', $elem)
 }
 
 sub convert-code-to-adoc(XML::Element $elem --> Str) {
