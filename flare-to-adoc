@@ -152,9 +152,74 @@ sub convert-h6-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-p-to-adoc(XML::Element $elem --> Str) {
-    # TODO: Handle style="font-weight: bold".
-    # TODO: Handle class="note".
-    convert-children-to-adoc($elem)
+    my $style;
+    my ($prefix, $suffix) = ('', '');
+
+    for $elem.attribs.kv -> $attr, $value {
+        given $attr {
+            when 'class' {
+                # Some classes are handled specially, other ones are just
+                # passed through.
+                my %admonition-classes =
+                    note        => 'NOTE',
+                    important   => 'IMPORTANT',
+                    example     => 'TIP'
+                ;
+
+                if defined my $admonition = %admonition-classes{$value} {
+                    $prefix = "[$admonition]\n====\n";
+                    $suffix = "\n====\n";
+                } else {
+                    $style = $value
+                }
+            }
+
+            when 'style' {
+                # Dumbest possible CSS parser.
+                for $value.split(';') -> $css-style {
+                    my ($css-name, $css-value) = $css-style.split(': ', 2);
+                    given $css-name {
+                        when 'text-align' {
+                            $style = "text-{$css-value}"
+                        }
+
+                        when 'font-style' {
+                            if $css-value eq 'italic' {
+                                $prefix = "{$prefix}_";
+                                $suffix = "_{$suffix}";
+                            } else {
+                                note "$*CURRENT-FILE: unsupported font-style $css-value."
+                            }
+                        }
+
+                        when 'font-weight' {
+                            if $css-value eq 'bold' {
+                                $prefix = "{$prefix}*";
+                                $suffix = "*{$suffix}";
+                            } else {
+                                note "$*CURRENT-FILE: unsupported font-weight $css-value."
+                            }
+                        }
+                    }
+                }
+            }
+
+            when /^MadCap:/ {
+                # Should we handle those? For now just ignore.
+            }
+
+            when /id | xmlns/ {
+                # Ignore those.
+            }
+        }
+    }
+
+    my $adoc = '';
+    if $style {
+        $adoc = "[.$style]"
+    }
+
+    $adoc ~ $prefix ~ convert-children-to-adoc($elem) ~ $suffix
 }
 
 sub convert-br-to-adoc(XML::Element $elem --> Str) {
