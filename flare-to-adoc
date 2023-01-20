@@ -57,9 +57,9 @@ sub convert-html-to-adoc(Str $path --> Str) {
 # functions for each of them.
 sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
     my $adoc = '';
-    if $elem.nodes {
-        for $elem.nodes -> $child {
-            if $child ~~ XML::Element {
+    for $elem.nodes -> $child {
+        given $child {
+            when XML::Element {
                 my $convert-child = "convert-{ $child.name }-to-adoc";
                 $convert-child ~~ tr/:/-/;
                 $adoc ~= &::($convert-child)($child);
@@ -68,7 +68,9 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
                         note "$*CURRENT-FILE: unsupported tag { $child.name }."
                     }
                 }
-            } elsif $child ~~ XML::Text {
+            }
+
+            when XML::Text {
                 # Unindent the text, this is important because many AsciiDoc
                 # constructs must be at the beginning of the line, without any
                 # spaces.
@@ -85,7 +87,9 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
                 }
 
                 $adoc ~= $text
-            } else {
+            }
+
+            default {
                 note qq{Ignoring unknown XML node "$child".}
             }
         }
