@@ -154,18 +154,24 @@ sub convert-br-to-adoc(XML::Element $elem --> Str) {
     "\n"
 }
 
-sub convert-span-to-adoc(XML::Element $elem --> Str) {
-    my $adoc = '';
-
-    my $class = $elem.attribs<class>;
-    $adoc ~= "[.$class]" if defined $class;
-
+sub convert-to-adoc-inline-style(Str $style, XML::Element $elem --> Str) {
     my $contents = convert-children-to-adoc($elem);
 
     # Blank lines are not allowed inside inline styles.
     $contents ~~ s:g/\n\n/\n/;
 
-    $adoc ~= "#$contents#"
+    "[.$style]#$contents#"
+}
+
+sub convert-span-to-adoc(XML::Element $elem --> Str) {
+    my $class = $elem.attribs<class>;
+
+    # Not using any style would result in the inline style being highlighted,
+    # which is probably not what we want, so just don't do anything special
+    # for it in this case.
+    $class ?? convert-to-adoc-inline-style($class, $elem)
+           !! convert-children-to-adoc($elem)
+
 }
 
 sub convert-ol-to-adoc(XML::Element $elem --> Str) {
@@ -302,7 +308,7 @@ sub convert-q-to-adoc(XML::Element $elem --> Str) {
 }
 
 sub convert-code-to-adoc(XML::Element $elem --> Str) {
-    convert-element-to-adoc('`', $elem, '`')
+    convert-to-adoc-inline-style('code', $elem)
 }
 
 sub convert-col-to-adoc(XML::Element $elem --> Str) {
