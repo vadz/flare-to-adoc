@@ -301,6 +301,10 @@ sub convert-q-to-adoc(XML::Element $elem --> Str) {
     convert-element-to-adoc('`', $elem, '`')
 }
 
+sub convert-code-to-adoc(XML::Element $elem --> Str) {
+    convert-element-to-adoc('`', $elem, '`')
+}
+
 sub convert-col-to-adoc(XML::Element $elem --> Str) {
     # TODO: Parse width and use it for the cols attribute of the table.
     ''
