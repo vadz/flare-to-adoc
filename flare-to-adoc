@@ -226,6 +226,7 @@ sub convert-dd-to-adoc(XML::Element $elem --> Str) {
 sub convert-img-to-adoc(XML::Element $elem --> Str) {
     my $adoc = '';
 
+    my $title = ''; # Optional image title.
     for $elem.attribs.kv -> $attr, $value {
         given $attr {
             when 'src' {
@@ -248,6 +249,10 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                 # Ignore it.
             }
 
+            when 'alt' {
+                $title = $value
+            }
+
             default {
                 note "$*CURRENT-FILE: $attr attribute of <img> ignored."
             }
@@ -255,7 +260,7 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
     }
 
     if $adoc {
-        $adoc ~= "[]\n"
+        $adoc ~= "[$title]\n"
     } else {
         note "$*CURRENT-FILE: <img> without src attribute?"
     }
