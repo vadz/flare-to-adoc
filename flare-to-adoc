@@ -244,8 +244,12 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                 # remove it from them.
                 my $parts = $value.IO.parts;
                 if $*IMAGE-DIRECTORY {
-                    note "$*CURRENT-FILE: image not in $*IMAGE-DIRECTORY."
-                        if $parts.dirname ne $*IMAGE-DIRECTORY
+                    # Compare the directories case-insensitively to account
+                    # for HTML files created on case-insensitive file systems.
+                    # In the actual use it doesn't matter as we only use the
+                    # base name in the generated AsciiDoc.
+                    note "$*CURRENT-FILE: image $value not in $*IMAGE-DIRECTORY."
+                        if $parts.dirname.fc ne $*IMAGE-DIRECTORY.fc
                 } else {
                     # Remember it for the next time.
                     $*IMAGE-DIRECTORY = $parts.dirname
