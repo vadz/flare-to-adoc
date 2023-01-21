@@ -559,6 +559,7 @@ sub MAIN(
         # Remove insignificant leading and trailing spaces and blank lines,
         # but leave a new line at the end of file.
         $adoc ~~ s/^\s+//;
+        $adoc ~~ s:g/\h+ $$//;
         $adoc ~~ s:g/\n\n\n+/\n\n/;
         $adoc ~~ s/\s+$/\n/;
 
