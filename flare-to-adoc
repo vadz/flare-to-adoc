@@ -46,6 +46,30 @@ sub snippet-definitions(--> Str) {
     $adoc
 }
 
+# Append AsciiDoc fragment adding spaces before it if necessary.
+sub append-to-adoc(Str $doc is rw, Str $add --> Str) {
+    if $doc {
+        given $add {
+            when /^ '['/ {
+                # We must separate '[' from the end of the previous word for
+                # it to be parsed correctly.
+                if $doc !~~ /<[(\ \n]> $/ {
+                    $doc ~= ' '
+                }
+            }
+
+            when /^ <[-_+]> ** 3/ {
+                # Also separate block start from the previous contents.
+                if $doc !~~ /\n $/ {
+                    $doc ~= "\n"
+                }
+            }
+        }
+    }
+
+    $doc ~= $add
+}
+
 sub convert-html-to-adoc(Str $path --> Str) {
     my $html-doc = from-xml-file($path);
     my $html-body = $html-doc.root.elements(:TAG<body>, :SINGLE);
@@ -62,7 +86,8 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
             when XML::Element {
                 my $convert-child = "convert-{ $child.name }-to-adoc";
                 $convert-child ~~ tr/:/-/;
-                $adoc ~= &::($convert-child)($child);
+                append-to-adoc($adoc, &::($convert-child)($child));
+
                 CATCH {
                     when X::NoSuchSymbol {
                         note "$*CURRENT-FILE: unsupported tag { $child.name }."
