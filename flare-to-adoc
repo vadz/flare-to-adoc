@@ -413,6 +413,10 @@ sub convert-strong-to-adoc(XML::Element $elem --> Str) {
     convert-to-adoc-inline-delim('*', $elem)
 }
 
+sub convert-i-to-adoc(XML::Element $elem --> Str) {
+    convert-to-adoc-inline-delim('_', $elem)
+}
+
 sub convert-em-to-adoc(XML::Element $elem --> Str) {
     convert-to-adoc-inline-delim('_', $elem)
 }
