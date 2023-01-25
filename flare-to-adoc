@@ -425,6 +425,10 @@ sub convert-q-to-adoc(XML::Element $elem --> Str) {
     convert-to-adoc-inline-delim('`', $elem)
 }
 
+sub convert-tt-to-adoc(XML::Element $elem --> Str) {
+    convert-to-adoc-inline-delim('`', $elem)
+}
+
 sub convert-code-to-adoc(XML::Element $elem --> Str) {
     convert-to-adoc-inline-style('code', $elem)
 }
