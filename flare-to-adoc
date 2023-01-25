@@ -433,6 +433,10 @@ sub convert-code-to-adoc(XML::Element $elem --> Str) {
     convert-to-adoc-inline-style('code', $elem)
 }
 
+sub convert-small-to-adoc(XML::Element $elem --> Str) {
+    convert-to-adoc-inline-style('small', $elem)
+}
+
 sub convert-u-to-adoc(XML::Element $elem --> Str) {
     convert-to-adoc-inline-style('underline', $elem)
 }
