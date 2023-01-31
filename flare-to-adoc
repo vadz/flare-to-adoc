@@ -534,6 +534,23 @@ sub convert-MadCap-snippetText-to-adoc(XML::Element $elem --> Str) {
     '{' ~ snippet-add-or-get($elem.attribs<src>) ~ '}'
 }
 
+sub convert-MadCap-variable-to-adoc(XML::Element $elem --> Str) {
+    if $elem.nodes {
+        note "$*CURRENT-FILE: non-empty <MadCap:variable> contents ignored."
+    }
+
+    # Represent this as an attribute with a similar name in AsciiDoc.
+    my $name = $elem.attribs<name>;
+    if !$name {
+        note "$*CURRENT-FILE: <MadCap:variable> without name ignored.";
+        return ''
+    }
+
+    $name ~~ s:g/'.'/-/;
+
+    '{' ~ $name ~ '}'
+}
+
 sub convert-MadCap-pageBreak-to-adoc(XML::Element $elem --> Str) {
     "\n<<<\n"
 }
