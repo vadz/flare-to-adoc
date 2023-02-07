@@ -411,9 +411,9 @@ sub convert-a-to-adoc(XML::Element $elem --> Str) {
     } else {
         my ($name, $id) = $elem.attribs<name id>;
         if ! defined $id {
-            note "$*CURRENT-FILE: unrecognized <a> format."
-        }
-        if $id ne $name {
+            note "$*CURRENT-FILE: unrecognized <a> format, ignoring.";
+            return ''
+        } elsif $id ne $name {
             note "$*CURRENT-FILE: mismatch between <a> name ($name) and id ($id)."
         }
 
