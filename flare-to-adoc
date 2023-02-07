@@ -552,6 +552,14 @@ sub convert-MadCap-snippetText-to-adoc(XML::Element $elem --> Str) {
     '{' ~ snippet-add-or-get($elem.attribs<src>) ~ '}'
 }
 
+sub convert-MadCap-snippetBlock-to-adoc(XML::Element $elem --> Str) {
+    if $elem.nodes {
+        note "$*CURRENT-FILE: non-empty <MadCap:snippetBlock> contents ignored."
+    }
+
+    "\n{" ~ snippet-add-or-get($elem.attribs<src>) ~ "}\n"
+}
+
 sub convert-MadCap-variable-to-adoc(XML::Element $elem --> Str) {
     if $elem.nodes {
         note "$*CURRENT-FILE: non-empty <MadCap:variable> contents ignored."
