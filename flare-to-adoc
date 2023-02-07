@@ -114,6 +114,22 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
                 $adoc ~= $text
             }
 
+            when XML::Comment {
+                # Convert single line comments to single line ones, otherwise
+                # use a block.
+                my $text = $child.data.trim;
+
+                if $text ~~ /\n/ {
+                    $adoc ~= qq:to/END/;
+                            ////
+                            $text
+                            ////
+                            END
+                } else {
+                    $adoc ~= "\n// $text\n"
+                }
+            }
+
             when XML::CDATA {
                 if $child.data ~~ /\S/ {
                     # Use .raku to show whitespace, which is commonly present
