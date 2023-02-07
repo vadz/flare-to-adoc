@@ -228,6 +228,8 @@ sub convert-p-to-adoc(XML::Element $elem --> Str) {
                             if $css-value eq 'italic' {
                                 $prefix = "{$prefix}_";
                                 $suffix = "_{$suffix}";
+                            } elsif $css-value eq 'normal' {
+                                # Just ignore but don't warn.
                             } else {
                                 note "$*CURRENT-FILE: unsupported font-style $css-value."
                             }
