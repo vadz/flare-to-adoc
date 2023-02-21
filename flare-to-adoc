@@ -565,7 +565,7 @@ sub convert-MadCap-snippetBlock-to-adoc(XML::Element $elem --> Str) {
         note "$*CURRENT-FILE: non-empty <MadCap:snippetBlock> contents ignored."
     }
 
-    "\n{" ~ snippet-add-or-get($elem.attribs<src>) ~ "}\n"
+    "\n\{" ~ snippet-add-or-get($elem.attribs<src>) ~ "}\n"
 }
 
 sub convert-MadCap-variable-to-adoc(XML::Element $elem --> Str) {
