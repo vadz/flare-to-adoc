@@ -523,6 +523,35 @@ sub convert-table-to-adoc(XML::Element $elem --> Str) {
     $table-attrs ~ "\n" ~ $body
 }
 
+sub convert-figcaption-to-adoc(XML::Element $elem --> Str) {
+    if ! defined $*FIGURE-CAPTION {
+        note "$*CURRENT-FILE: <figcaption> outside <figure> ignored."
+    } elsif $*FIGURE-CAPTION ne '' {
+        note "$*CURRENT-FILE: duplicate <figcaption> ignored."
+    } else {
+        $*FIGURE-CAPTION = convert-children-to-adoc($elem)
+    }
+
+    # No output, we just remember it in FIGURE-CAPTION.
+    ''
+}
+
+sub convert-figure-to-adoc(XML::Element $elem --> Str) {
+    # Dynamically scoped variable used in <figcaption> handler.
+    my $*FIGURE-CAPTION = '';
+
+    my $adoc = convert-children-to-adoc($elem);
+
+    if $*FIGURE-CAPTION {
+        $adoc = qq:to/END/;
+            .{ $*FIGURE-CAPTION.trim }
+            { $adoc.trim }
+            END
+    }
+
+    $adoc
+}
+
 sub convert-MadCap-xref-to-adoc(XML::Element $elem --> Str) {
     my $href = $elem.attribs<href>;
     if ! defined $href {
