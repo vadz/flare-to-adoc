@@ -379,7 +379,7 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                 $adoc = "\nimage::{ $parts.basename }"
             }
 
-            when 'style' {
+            when 'style' | 'MadCap:mediastyle' {
                 # Ignore it.
             }
 
