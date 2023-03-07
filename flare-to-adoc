@@ -265,6 +265,28 @@ sub convert-p-to-adoc(XML::Element $elem --> Str) {
     $adoc ~ $prefix ~ convert-children-to-adoc($elem) ~ $suffix
 }
 
+sub convert-div-to-adoc(XML::Element $elem --> Str) {
+    my ($prefix, $suffix) = ('', '');
+
+    for $elem.attribs.kv -> $attr, $value {
+        given $attr {
+            when 'MadCap:conditions' {
+                # Dots are not allowed in the attributes names, so replace them.
+                my $condition = TR/./-/ with $value;
+
+                $prefix = "\nifdef::{$condition}[]\n";
+                $suffix = "endif::[]\n";
+            }
+
+            default {
+                note "$*CURRENT-FILE: $attr attribute of <div> ignored."
+            }
+        }
+    }
+
+    $prefix ~ convert-children-to-adoc($elem) ~ $suffix
+}
+
 sub convert-br-to-adoc(XML::Element $elem --> Str) {
     # This shouldn't happen.
     if $elem.nodes {
