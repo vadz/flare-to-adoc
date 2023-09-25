@@ -616,7 +616,18 @@ sub convert-MadCap-snippetBlock-to-adoc(XML::Element $elem --> Str) {
         note "$*CURRENT-FILE: non-empty <MadCap:snippetBlock> contents ignored."
     }
 
-    "\n\{" ~ snippet-add-or-get($elem.attribs<src>) ~ "}\n"
+    my $name = $elem.attribs<src>;
+
+    # Get rid of Flare-specific flnsp extension and just use the standard HTML.
+    $name ~~ s/\.flsnp$/.html/;
+
+    qq:to/END/;
+
+        ++++
+        include::{$name}[]
+        ++++
+
+        END
 }
 
 sub convert-MadCap-variable-to-adoc(XML::Element $elem --> Str) {
