@@ -656,6 +656,14 @@ sub convert-MadCap-tocProxy-to-adoc(XML::Element $elem --> Str) {
     ''
 }
 
+sub convert-MadCap-equation-to-adoc(XML::Element $elem --> Str) {
+    my $text = $elem.nodes;
+    $text ~~ s/^ '$'//;
+    $text ~~ s/'$' $//;
+
+    "stem:[$text]"
+}
+
 sub MAIN(
         *@flare-files,
         Bool :$verbose,          #= Be more talkative.
