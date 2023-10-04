@@ -259,7 +259,7 @@ sub convert-p-to-adoc(XML::Element $elem --> Str) {
 
     my $adoc = '';
     if $style {
-        $adoc = "[.$style]"
+        $adoc = "[.$style]\n"
     }
 
     $adoc ~ $prefix ~ convert-children-to-adoc($elem) ~ $suffix
