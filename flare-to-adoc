@@ -77,6 +77,9 @@ sub convert-html-to-adoc(Str $path --> Str) {
     convert-children-to-adoc($html-body)
 }
 
+# Global variable indicating whether we're at the beginning of a new paragraph.
+my $new-paragraph = True;
+
 # Iterate over all children of an element calling the appropriate conversion
 # functions for each of them.
 sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
@@ -93,6 +96,8 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
                         note "$*CURRENT-FILE: unsupported tag { $child.name }."
                     }
                 }
+
+                $new-paragraph = $child.name eq any('br', 'p');
             }
 
             when XML::Text {
@@ -106,8 +111,12 @@ sub convert-children-to-adoc(XML::Element $elem, Bool :$skip-ws --> Str) {
                 # HTML.
                 $text ~~ s:g/'&#160;'/\{nbsp}/;
 
-                if $skip-ws && $text eq "\n" {
-                    # Skip text consisting of whitespace only.
+                # If there is any not empty text, it's not the start of the
+                # new paragraph any longer.
+                if $text ne "\n" {
+                    $new-paragraph = False
+                } elsif $skip-ws {
+                    # Skip text consisting of only new line(s).
                     next
                 }
 
@@ -401,8 +410,13 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                     $*IMAGE-DIRECTORY = $parts.dirname
                 }
 
-                # Our images are all block images and never inline.
-                $adoc = "\nimage::{ $parts.basename }"
+                # Images at the start of a new paragraph become block images,
+                # so they must be separated from the preceding text using new
+                # line and use double colon, all the other ones -- inline.
+                $adoc ~= "\n" if $new-paragraph;
+                $adoc ~= "image:";
+                $adoc ~= ':' if $new-paragraph;
+                $adoc ~= $parts.basename
             }
 
             when 'style' | 'MadCap:mediastyle' {
@@ -450,7 +464,8 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
     }
 
     if $adoc {
-        $adoc ~= "[$title]\n"
+        $adoc ~= "[$title]";
+        $adoc ~= "\n" if $new-paragraph
     } else {
         note "$*CURRENT-FILE: <img> without src attribute?"
     }
