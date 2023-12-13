@@ -444,7 +444,7 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
             }
 
             default {
-                note "$*CURRENT-FILE: $attr attribute of <img> ignored."
+                note qq{$*CURRENT-FILE: $attr="$value" attribute of <img> ignored.}
             }
         }
     }
