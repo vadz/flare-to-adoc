@@ -278,6 +278,10 @@ sub convert-div-to-adoc(XML::Element $elem --> Str) {
                 $suffix = "endif::[]\n";
             }
 
+            when 'style' {
+                note qq{$*CURRENT-FILE: Unsupported "$value" <div> style ignored.}
+            }
+
             default {
                 note "$*CURRENT-FILE: $attr attribute of <div> ignored."
             }
