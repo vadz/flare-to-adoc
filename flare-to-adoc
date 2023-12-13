@@ -169,10 +169,20 @@ sub make-adoc-header(Int $level, XML::Element $elem --> Str) {
     my $header-text = convert-children-to-adoc($elem);
     $header-text ~~ s:g/\n/ /;
 
+    # Hack: if the header starts with an anchor, move it before the header
+    # itself as otherwise it wouldn't be taken into account and, worse, appear
+    # as raw HTML link in the links created by asciidoc-multipage.
+    my $adoc = '';
+    if $header-text ~~ s/^^ '[[' $<anchor>=[\w+] ']]'// {
+        $adoc ~= "\n" ~ '[[' ~ $/<anchor> ~ ']]'
+    }
+
     # The number of equal signs is level+1, in particular we never create
     # level 0 headers here, as this corresponds to the document title and can
     # only be used once.
-    "\n" ~ ('=' x ($level + 1)) ~ ' ' ~ $header-text ~ "\n"
+    $adoc ~= "\n" ~ ('=' x ($level + 1)) ~ ' ' ~ $header-text ~ "\n";
+
+    $adoc
 }
 
 sub convert-h1-to-adoc(XML::Element $elem --> Str) {
