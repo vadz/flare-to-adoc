@@ -409,6 +409,23 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                 $title = $value
             }
 
+            when 'align' {
+                given $value {
+                    when 'middle' {
+                        # "middle" is the default alignment anyhow, ignore it.
+                    }
+
+                    when 'top' {
+                        # This seems to be invalid but is used in some existing
+                        # files, just ignore too.
+                    }
+
+                    default {
+                        note "$*CURRENT-FILE: $value alignment of <img> not supported yet."
+                    }
+                }
+            }
+
             default {
                 note "$*CURRENT-FILE: $attr attribute of <img> ignored."
             }
