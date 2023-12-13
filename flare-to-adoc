@@ -426,6 +426,19 @@ sub convert-img-to-adoc(XML::Element $elem --> Str) {
                 }
             }
 
+            when 'xmlns' {
+                given $value {
+                    when '' | 'http://www.w3.org/1999/xhtml' {
+                        # Some existing tags have unnecessary xmlns attributes,
+                        # ignore them.
+                    }
+
+                    default {
+                        note "$*CURRENT-FILE: $value XML namespace on <img> ignored."
+                    }
+                }
+            }
+
             default {
                 note "$*CURRENT-FILE: $attr attribute of <img> ignored."
             }
